@@ -1,45 +1,14 @@
-import spidev
+from inky.auto import auto
+from PIL import Image, ImageDraw
 
-from PIL import Image
+display = auto()
 
-from inky.inky_uc8159 import Inky
+img = Image.new("P", display.resolution, 1)
+draw = ImageDraw.Draw(img)
 
-
-# =====================================
-# Open SPI manually first
-# =====================================
-
-spi = spidev.SpiDev()
-
-spi.open(0, 0)
-
-spi.max_speed_hz = 488000
-
-
-# =====================================
-# Init display
-# =====================================
-
-display = Inky(
-    resolution=(600, 448),
-    colour="multi"
-)
-
-display.set_border(display.WHITE)
-
-
-# =====================================
-# Create image
-# =====================================
-
-img = Image.new(
-    "P",
-    (600, 448),
-    display.WHITE
-)
+draw.rectangle((0, 0, 799, 479), fill=2)
 
 display.set_image(img)
-
 display.show()
 
-print("SUCCESS")
+print("Done")

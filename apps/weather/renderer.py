@@ -5,16 +5,11 @@ from datetime import datetime
 
 from apps.weather.icons import get_weather_text
 
-# WIDTH = 800
-# HEIGHT = 480
-WIDTH = 600
-HEIGHT = 448
-
+WIDTH = 800
+HEIGHT = 480
 
 WHITE = "white"
 BLACK = "black"
-
-# Inky Impression accent blue
 BLUE = (0, 90, 255)
 
 FONT_REGULAR = "assets/fonts/Inter-Regular.ttf"
@@ -62,22 +57,13 @@ def get_rain_message(hourly):
     first_rain = rainy_hours[0]["time"][:2]
 
     if max_rain < 1:
-
-        return (
-            f"Light rain at {first_rain}:00"
-        )
+        return f"Light rain at {first_rain}:00"
 
     elif max_rain < 3:
-
-        return (
-            f"Rain expected at {first_rain}:00"
-        )
+        return f"Rain expected at {first_rain}:00"
 
     else:
-
-        return (
-            f"Heavy rain later today"
-        )
+        return "Heavy rain later today"
 
 
 def render_weather_dashboard(weather):
@@ -92,9 +78,7 @@ def render_weather_dashboard(weather):
 
     draw = ImageDraw.Draw(image)
 
-    # =====================================
     # Header
-    # =====================================
 
     draw.text(
         (40, 28),
@@ -125,9 +109,7 @@ def render_weather_dashboard(weather):
         width=1
     )
 
-    # =====================================
-    # Main Weather
-    # =====================================
+    # Main weather
 
     icon_path = (
         "assets/icons/weathericons/weather/svg/"
@@ -227,9 +209,7 @@ def render_weather_dashboard(weather):
     scaled_min = center - visual_range / 2
     scaled_max = center + visual_range / 2
 
-    # =====================================
     # X positions
-    # =====================================
 
     x_positions = []
 
@@ -241,9 +221,7 @@ def render_weather_dashboard(weather):
 
         x_positions.append(x)
 
-    # =====================================
     # Vertical grid lines
-    # =====================================
 
     for x in x_positions:
 
@@ -254,13 +232,11 @@ def render_weather_dashboard(weather):
                 x,
                 graph_top + graph_height
             ),
-            fill=(225, 225, 225),
+            fill=(220, 220, 220),
             width=1
         )
 
-    # =====================================
     # Horizontal temperature grid
-    # =====================================
 
     temp_floor = int(scaled_min)
     temp_ceiling = int(scaled_max) + 1
@@ -289,7 +265,7 @@ def render_weather_dashboard(weather):
                 graph_left + graph_width,
                 y
             ),
-            fill=(190, 190, 190),
+            fill=(210, 210, 210),
             width=1
         )
 
@@ -300,9 +276,7 @@ def render_weather_dashboard(weather):
             font=fonts["tiny"]
         )
 
-    # =====================================
     # Hour labels
-    # =====================================
 
     for x, entry in zip(
         x_positions,
@@ -316,9 +290,7 @@ def render_weather_dashboard(weather):
             font=fonts["small"]
         )
 
-    # =====================================
     # Temperature line
-    # =====================================
 
     line_points = []
 
@@ -343,24 +315,22 @@ def render_weather_dashboard(weather):
     draw.line(
         line_points,
         fill=BLACK,
-        width=2
+        width=3
     )
 
     for point in line_points:
 
         draw.ellipse(
             (
-                point[0] - 3,
-                point[1] - 3,
-                point[0] + 3,
-                point[1] + 3
+                point[0] - 4,
+                point[1] - 4,
+                point[0] + 4,
+                point[1] + 4
             ),
             fill=BLACK
         )
 
-    # =====================================
     # Rain bars
-    # =====================================
 
     has_rain = any(
         h["rain"] > 0
@@ -380,7 +350,6 @@ def render_weather_dashboard(weather):
         if max_rain < 1:
             max_rain = 1
 
-        # Right rain axis
         draw.line(
             (
                 graph_left + graph_width + 10,
@@ -392,7 +361,6 @@ def render_weather_dashboard(weather):
             width=1
         )
 
-        # Top value
         draw.text(
             (
                 graph_left + graph_width + 16,
@@ -403,7 +371,6 @@ def render_weather_dashboard(weather):
             font=fonts["tiny"]
         )
 
-        # Bottom value
         draw.text(
             (
                 graph_left + graph_width + 16,
@@ -414,7 +381,6 @@ def render_weather_dashboard(weather):
             font=fonts["tiny"]
         )
 
-        # mm label
         draw.text(
             (
                 graph_left + graph_width + 16,
@@ -451,9 +417,8 @@ def render_weather_dashboard(weather):
             )
 
 
-    # =====================================
+
     # Bottom divider
-    # =====================================
 
     draw.line(
         (40, 385, 760, 385),
@@ -461,13 +426,11 @@ def render_weather_dashboard(weather):
         width=1
     )
 
-    # =====================================
-    # Bottom Forecast
-    # =====================================
+    # Bottom forecast
 
     section_width = 720 // 5
 
-    for i, entry in enumerate(hourly[:5]):
+    for i, entry in enumerate(weather["hourly"][:5]):
 
         center_x = (
             40

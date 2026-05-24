@@ -1,8 +1,35 @@
+# Virtualenv
 .venv/
+venv/
+
+# Python
 __pycache__/
 *.pyc
+
+# Cache
 cache/
-*.png
+
+# Environment
 .env
-.DS_Store
+
+# Secrets
+credentials.json
+token.json
+
+# Editor
 .vscode/
+
+# macOS
+.DS_Store
+
+# Debug / generated images
+debug.png
+*.jpg
+*.jpeg
+
+# Optional logs
+*.log
+
+client_secret*.json
+token.json
+credentials.json

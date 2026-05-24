@@ -4,70 +4,93 @@ from gpiozero import Button
 import time
 import traceback
 
-#Værstasjon
+# =========================================================
+# WEATHER
+# =========================================================
+
 from apps.weather.data import (
     fetch_weather_data,
-    parse_weather_data
+    parse_weather_data,
 )
 
 from apps.weather.renderer import (
-    render_weather_dashboard
+    render_weather_dashboard,
 )
 
-#Kalender
+# =========================================================
+# CALENDAR
+# =========================================================
+
 from apps.calendar.data import (
-    get_calendar_events
+    get_calendar_events,
 )
 
 from apps.calendar.renderer import (
-    render_calendar_dashboard
+    render_calendar_dashboard,
 )
 
-# =====================================
-# Display
-# =====================================
+# =========================================================
+# DISPLAY
+# =========================================================
 
 display = auto()
 
-# =====================================
-# Buttons
-# =====================================
+# =========================================================
+# BUTTONS
+# =========================================================
 
 button_a = Button(5)
 button_b = Button(6)
 button_c = Button(16)
 button_d = Button(24)
 
-# =====================================
-# State
-# =====================================
+# =========================================================
+# APPS
+# =========================================================
 
 apps = [
     "weather",
-    "calendar"
+    "calendar",
 ]
 
 current_app_index = 0
 
-last_refresh = 0
+# =========================================================
+# REFRESH
+# =========================================================
 
-REFRESH_INTERVAL = 60 * 30
+last_weather_refresh = 0
+last_calendar_refresh = 0
 
-# =====================================
-# Weather Render
-# =====================================
+WEATHER_REFRESH_INTERVAL = 60 * 30
+CALENDAR_REFRESH_INTERVAL = 60 * 5
+
+# =========================================================
+# CACHE
+# =========================================================
 
 cached_weather = None
 
+cached_calendar = {
+    "today": [],
+    "tomorrow": [],
+}
 
-def get_weather():
+# =========================================================
+# WEATHER
+# =========================================================
+
+def refresh_weather_data():
 
     global cached_weather
 
+    print("Fetching weather...")
+
     raw = fetch_weather_data()
 
-    cached_weather = parse_weather_data(raw)
-
+    cached_weather = parse_weather_data(
+        raw
+    )
 
 def render_weather():
 
@@ -75,25 +98,38 @@ def render_weather():
         cached_weather
     )
 
+# =========================================================
+# CALENDAR
+# =========================================================
+
+def refresh_calendar_data():
+
+    global cached_calendar
+
+    print("Fetching calendar...")
+
+    cached_calendar = get_calendar_events()
 
 def render_calendar():
 
-    events = get_calendar_events()
-
     return render_calendar_dashboard(
-        events
+        cached_calendar["today"],
+        cached_calendar["tomorrow"],
     )
 
-
-# =====================================
-# App Router
-# =====================================
+# =========================================================
+# APP ROUTER
+# =========================================================
 
 def render_current_app():
 
     current_app = apps[
         current_app_index
     ]
+
+    print(
+        f"Rendering: {current_app}"
+    )
 
     if current_app == "weather":
 
@@ -105,14 +141,13 @@ def render_current_app():
 
     return render_weather()
 
-
-# =====================================
-# Display Refresh
-# =====================================
+# =========================================================
+# DISPLAY REFRESH
+# =========================================================
 
 def refresh_display():
 
-    print("Rendering app...")
+    print("Rendering image...")
 
     image = render_current_app()
 
@@ -132,22 +167,24 @@ def refresh_display():
 
     print("Display updated")
 
+# =========================================================
+# INITIAL LOAD
+# =========================================================
 
-# =====================================
-# Initial Load
-# =====================================
+print("Initial data fetch...")
 
-print("Fetching initial weather...")
+refresh_weather_data()
 
-get_weather()
+refresh_calendar_data()
 
 refresh_display()
 
-last_refresh = time.time()
+last_weather_refresh = time.time()
+last_calendar_refresh = time.time()
 
-# =====================================
-# Main Loop
-# =====================================
+# =========================================================
+# MAIN LOOP
+# =========================================================
 
 while True:
 
@@ -155,82 +192,121 @@ while True:
 
         now = time.time()
 
-        # ==============================
-        # Auto refresh every 30 mins
-        # ==============================
+        # =================================================
+        # AUTO REFRESH
+        # =================================================
+
+        # =================================================
+        # WEATHER REFRESH
+        # =================================================
 
         if (
-            now - last_refresh
-            > REFRESH_INTERVAL
+            now - last_weather_refresh
+            > WEATHER_REFRESH_INTERVAL
         ):
 
             print(
-                "30 minute refresh..."
+                "Refreshing weather..."
             )
 
-            get_weather()
+            refresh_weather_data()
 
-            refresh_display()
+            if apps[current_app_index] == "weather":
 
-            last_refresh = now
+                refresh_display()
 
-        # ==============================
-        # Button A
-        # ==============================
+            last_weather_refresh = now
+
+        # =================================================
+        # CALENDAR REFRESH
+        # =================================================
+
+        if (
+            now - last_calendar_refresh
+            > CALENDAR_REFRESH_INTERVAL
+        ):
+
+            print(
+                "Refreshing calendar..."
+            )
+
+            refresh_calendar_data()
+
+            if apps[current_app_index] == "calendar":
+
+                refresh_display()
+
+            last_calendar_refresh = now
+
+        # =================================================
+        # BUTTON A → WEATHER
+        # =================================================
 
         if button_a.is_pressed:
 
-            print("Button A")
+            print(
+                "Weather app"
+            )
 
             current_app_index = 0
 
             refresh_display()
 
-            time.sleep(0.5)
+            time.sleep(0.4)
 
-        # ==============================
-        # Button B
-        # ==============================
+        # =================================================
+        # BUTTON B → CALENDAR
+        # =================================================
 
         if button_b.is_pressed:
 
-            print("Button B")
+            print(
+                "Calendar app"
+            )
 
             current_app_index = 1
 
+            refresh_calendar_data()
+
             refresh_display()
 
-            time.sleep(0.5)
+            time.sleep(0.4)
 
-        # ==============================
-        # Button C
-        # ==============================
+        # =================================================
+        # BUTTON C → FORCE REFRESH
+        # =================================================
 
         if button_c.is_pressed:
 
-            print("Button C")
+            print(
+                "Refreshing data..."
+            )
 
-            current_app_index = 2
+            refresh_weather_data()
+
+            refresh_calendar_data()
 
             refresh_display()
 
             time.sleep(0.5)
 
-        # ==============================
-        # Button D
-        # ==============================
+        # =================================================
+        # BUTTON D → REDRAW
+        # =================================================
 
         if button_d.is_pressed:
 
-            print("Button D")
-
-            current_app_index = 3
+            print(
+                "Debug refresh"
+            )
 
             refresh_display()
 
-            time.sleep(0.5)
+            time.sleep(0.4)
 
-        # Idle sleep
+        # =================================================
+        # LOOP DELAY
+        # =================================================
 
         time.sleep(0.1)
 
@@ -242,6 +318,7 @@ while True:
 
     except Exception as e:
 
+        print("ERROR:")
         print(e)
 
         traceback.print_exc()
